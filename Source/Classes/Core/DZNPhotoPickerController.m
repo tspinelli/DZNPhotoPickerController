@@ -48,8 +48,12 @@ static DZNPhotoPickerControllerCancellationBlock _cancellationBlock;
 {
     [super loadView];
     
-    self.view.backgroundColor = [UIColor whiteColor];
-}
+    if (@available(iOS 13.0, *)) {
+        self.view.backgroundColor = [UIColor systemBackgroundColor];
+    } else {
+        // Fallback on earlier versions
+        self.view.backgroundColor = [UIColor whiteColor];
+    }}
 
 - (void)viewWillAppear:(BOOL)animated
 {
@@ -163,7 +167,7 @@ static DZNPhotoPickerControllerCancellationBlock _cancellationBlock;
         [controller stopLoadingRequest];
     }
     
-    [controller.searchController.searchBar resignFirstResponder];
+//    [controller.searchController.searchBar resignFirstResponder];
     
     if (self.cancellationBlock) {
         self.cancellationBlock(self);

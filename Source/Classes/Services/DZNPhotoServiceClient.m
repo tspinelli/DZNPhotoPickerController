@@ -141,9 +141,27 @@
         [params setObject:@"json" forKey:@"format"];
         [params setObject:@"photos" forKey:@"media"];
         [params setObject:@"relevance" forKey:@"sort"];
-        [params setObject:@YES forKey:@"in_gallery"];
+//        [params setObject:@YES forKey:@"in_gallery"];
         [params setObject:@1 forKey:@"safe_search"];
+        [params setObject:@"any" forKey:@"tag_mode"];
+        [params setObject:@1 forKey:@"privacy_filter"];
         [params setObject:@1 forKey:@"content_type"];
+        [params setObject:@"4,5,6,7" forKey:@"license"];
+        [params setObject:@"owner_name,license" forKey:@"extras"];
+
+        //        <licenses>
+        //          <license id="0" name="All Rights Reserved" url="" />
+        //          <license id="1" name="Attribution-NonCommercial-ShareAlike License" url="https://creativecommons.org/licenses/by-nc-sa/2.0/" />
+        //          <license id="2" name="Attribution-NonCommercial License" url="https://creativecommons.org/licenses/by-nc/2.0/" />
+        //          <license id="3" name="Attribution-NonCommercial-NoDerivs License" url="https://creativecommons.org/licenses/by-nc-nd/2.0/" />
+        //          <license id="4" name="Attribution License" url="https://creativecommons.org/licenses/by/2.0/" />
+        //          <license id="5" name="Attribution-ShareAlike License" url="https://creativecommons.org/licenses/by-sa/2.0/" />
+        //          <license id="6" name="Attribution-NoDerivs License" url="https://creativecommons.org/licenses/by-nd/2.0/" />
+        //          <license id="7" name="No known copyright restrictions" url="https://www.flickr.com/commons/usage/" />
+        //          <license id="8" name="United States Government Work" url="http://www.usa.gov/copyright.shtml" />
+        //          <license id="9" name="Public Domain Dedication (CC0)" url="https://creativecommons.org/publicdomain/zero/1.0/" />
+        //          <license id="10" name="Public Domain Mark" url="https://creativecommons.org/publicdomain/mark/1.0/" />
+        //        </licenses>
     }
     else if (self.service == DZNPhotoPickerControllerServiceGoogleImages)
     {

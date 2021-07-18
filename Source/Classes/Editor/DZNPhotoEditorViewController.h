@@ -10,6 +10,7 @@
 
 #import <UIKit/UIKit.h>
 #import "DZNPhotoPickerControllerConstants.h"
+#import "DZNPhotoMetadata.h"
 
 @class DZNPhotoEditorViewController;
 
@@ -21,6 +22,9 @@ typedef void (^DZNPhotoEditorCancelBlock)(DZNPhotoEditorViewController *editor);
  */
 @interface DZNPhotoEditorViewController : UIViewController
 
+/** An optional DZNPhotoMetadata use for downloading the image. */
+@property (nonatomic, weak) DZNPhotoMetadata *photoMetadata;
+
 /** The cropping mode (ie: Square, Circular or Custom). Default is Square. */
 @property (nonatomic, assign) DZNPhotoEditorViewControllerCropMode cropMode;
 /** The cropping size. Default is view's size.width,size.width (most of the cases 320,320). */
@@ -31,7 +35,9 @@ typedef void (^DZNPhotoEditorCancelBlock)(DZNPhotoEditorViewController *editor);
 /** The bottom-left action button. */
 @property (nonatomic, readonly) UIButton *leftButton;
 /** The bottom-right action button. */
-@property (nonatomic, readonly) UIButton *rightButton;
+//@property (nonatomic, readonly) UIButton *rightButton;
+@property (nonatomic, readonly) UILabel *licenseLabel;
+
 /** The activity indicator to indicate that the image is being downloaded. */
 @property (nonatomic, readonly) UIActivityIndicatorView *activityIndicator;
 

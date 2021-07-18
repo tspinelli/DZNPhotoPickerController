@@ -39,8 +39,8 @@
             _Id = [object objectForKey:@"id"];
             _authorName = [[object valueForKeyPath:@"user.fullname"] stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceCharacterSet]];
             _authorUsername = [object valueForKeyPath:@"user.username"];
-            _authorProfileURL = [NSURL URLWithString:[NSString stringWithFormat:@"http://500px.com/%@", _authorUsername]];
-            _detailURL = [NSURL URLWithString:[NSString stringWithFormat:@"http://500px.com/photo/%@", _Id]];
+            _authorProfileURL = [NSURL URLWithString:[NSString stringWithFormat:@"https://500px.com/%@", _authorUsername]];
+            _detailURL = [NSURL URLWithString:[NSString stringWithFormat:@"https://500px.com/photo/%@", _Id]];
             _thumbURL = [NSURL URLWithString:[[[object objectForKey:@"images"] objectAtIndex:0] objectForKey:@"url"]];
             _sourceURL = [NSURL URLWithString:[[[object objectForKey:@"images"] objectAtIndex:1] objectForKey:@"url"]];
             _width = [object objectForKey:@"width"];
@@ -55,11 +55,16 @@
         {
             _Id = [object objectForKey:@"id"];
             _authorName = nil;
-            _authorUsername = [object objectForKey:@"owner"];
-            _authorProfileURL = [NSURL URLWithString:[NSString stringWithFormat:@"http://www.flickr.com/photos/%@", _authorUsername]];
-            _detailURL = [NSURL URLWithString:[NSString stringWithFormat:@"http://www.flickr.com/photos/%@/%@", _authorUsername, _Id]];
+
+            NSString *licenseString = [object objectForKey:@"license"];
+            NSInteger temp = licenseString.integerValue;
+            if (licenseString) { _license = &temp; }
+
+            _authorUsername = [object objectForKey:@"ownername"];
+            _authorProfileURL = [NSURL URLWithString:[NSString stringWithFormat:@"https://www.flickr.com/photos/%@", _authorUsername]];
+            _detailURL = [NSURL URLWithString:[NSString stringWithFormat:@"https://www.flickr.com/photos/%@/%@", _authorUsername, _Id]];
             
-            NSMutableString *url = [NSMutableString stringWithFormat:@"http://farm%@.static.flickr.com/%@/%@_%@", [[object objectForKey:@"farm"] stringValue], [object objectForKey:@"server"], [object objectForKey:@"id"], [object objectForKey:@"secret"]];
+            NSMutableString *url = [NSMutableString stringWithFormat:@"https://farm%@.static.flickr.com/%@/%@_%@", [[object objectForKey:@"farm"] stringValue], [object objectForKey:@"server"], [object objectForKey:@"id"], [object objectForKey:@"secret"]];
             _thumbURL = [NSURL URLWithString:[NSString stringWithFormat:@"%@_q.jpg", url]];
             _sourceURL = [NSURL URLWithString:[NSString stringWithFormat:@"%@_z.jpg", url]];
             _contentType = @"image/jpeg";
@@ -69,7 +74,7 @@
             _Id = [object objectForKey:@"id"];
             _authorName = [object valueForKeyPath:@"user.full_name"];
             _authorUsername = [object valueForKeyPath:@"user.username"];
-            _authorProfileURL = [NSURL URLWithString:[NSString stringWithFormat:@"http://instagram.com/%@", _authorUsername]];
+            _authorProfileURL = [NSURL URLWithString:[NSString stringWithFormat:@"https://instagram.com/%@", _authorUsername]];
             _detailURL = [NSURL URLWithString:[object objectForKey:@"link"]];
             _thumbURL = [NSURL URLWithString:[object valueForKeyPath:@"images.thumbnail.url"]];
             _sourceURL = [NSURL URLWithString:[object valueForKeyPath:@"images.standard_resolution.url"]];

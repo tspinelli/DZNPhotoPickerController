@@ -14,12 +14,12 @@
 @class DZNPhotoPickerController;
 
 /** The collection view controller in charge of displaying the resulting thumb images. */
-@interface DZNPhotoDisplayViewController : UICollectionViewController <UISearchBarDelegate, UISearchControllerDelegate, UISearchResultsUpdating>
+@interface DZNPhotoDisplayViewController : UICollectionViewController /**<, UISearchControllerDelegate, UISearchResultsUpdating>*/
 
 /** The nearest ancestor in the view controller hierarchy that is a photo picker controller. */
 @property (nonatomic, readonly) DZNPhotoPickerController *navigationController;
 /** The view controller's search controller. */
-@property (nonatomic, readonly) UISearchController *searchController;
+/*@property (nonatomic, readonly) UISearchController *searchController;*/
 /** The count number of rows of thumbs to be diplayed. */
 @property (nonatomic, readonly) NSUInteger rowCount;
 /** YES if the controller started a request and loading content. */
@@ -37,5 +37,7 @@
  Stops any loading HTTP request.
  */
 - (void)stopLoadingRequest;
+
+- (void)shouldSearchPhotos:(NSString *)keyword;
 
 @end

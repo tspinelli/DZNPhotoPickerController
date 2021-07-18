@@ -33,7 +33,7 @@ static NSUInteger kDZNPhotoDisplayMinimumColumnCount = 4.0;
 @interface DZNPhotoDisplayViewController () <UICollectionViewDelegateFlowLayout, UITableViewDelegate,
                                             DZNEmptyDataSetSource, DZNEmptyDataSetDelegate>
 
-@property (nonatomic, readonly) DZNPhotoSearchResultsController *searchResultsController;
+//@property (nonatomic, readonly) DZNPhotoSearchResultsController *searchResultsController;
 @property (nonatomic, readonly) UIButton *loadButton;
 @property (nonatomic, readonly) UIActivityIndicatorView *activityIndicator;
 
@@ -52,8 +52,8 @@ static NSUInteger kDZNPhotoDisplayMinimumColumnCount = 4.0;
 @end
 
 @implementation DZNPhotoDisplayViewController
-@synthesize searchController = _searchController;
-@synthesize searchResultsController = _searchResultsController;
+//@synthesize searchController = _searchController;
+//@synthesize searchResultsController = _searchResultsController;
 @synthesize loadButton = _loadButton;
 @synthesize activityIndicator = _activityIndicator;
 
@@ -103,7 +103,13 @@ static NSUInteger kDZNPhotoDisplayMinimumColumnCount = 4.0;
     self.automaticallyAdjustsScrollViewInsets = YES;
     self.definesPresentationContext = YES;
     
-    self.collectionView.backgroundColor = [UIColor whiteColor];
+    if (@available(iOS 13.0, *)) {
+        self.collectionView.backgroundColor = [UIColor systemBackgroundColor];
+    } else {
+        // Fallback on earlier versions
+        self.collectionView.backgroundColor = [UIColor whiteColor];
+    }
+    
     self.collectionView.emptyDataSetSource = self;
     self.collectionView.emptyDataSetDelegate = self;
     
@@ -116,14 +122,9 @@ static NSUInteger kDZNPhotoDisplayMinimumColumnCount = 4.0;
 {
     [super viewWillAppear:animated];
     
-    if (!self.metadataList) {
-
-        if (self.searchBar.text.length > 0) {
-            [self searchPhotosWithKeyword:self.searchBar.text];
-        }
-        else {
-            [self.searchController setActive:YES];
-            [self.searchBar becomeFirstResponder];
+    if (!_metadataList) {
+        if (self.navigationController.initialSearchTerm.length > 0) {
+            [self searchPhotosWithKeyword:self.navigationController.initialSearchTerm];
         }
     }
 }
@@ -166,50 +167,50 @@ static NSUInteger kDZNPhotoDisplayMinimumColumnCount = 4.0;
 }
 
 /*  Returns the custom search display controller. */
-- (UISearchController *)searchController
-{
-    if (!_searchController) {
-        
-        UIViewController *resultsController = self.canSearchTags ? self.searchResultsController : nil;
-        
-        _searchController = [[UISearchController alloc] initWithSearchResultsController:resultsController];
-        _searchController.searchResultsUpdater = self;
-        _searchController.delegate = self;
-        _searchController.dimsBackgroundDuringPresentation = YES;
-        _searchController.hidesNavigationBarDuringPresentation = YES;
+//- (UISearchController *)searchController
+//{
+//    if (!_searchController) {
+//
+//        UIViewController *resultsController = self.canSearchTags ? self.searchResultsController : nil;
+//
+//        _searchController = [[UISearchController alloc] initWithSearchResultsController:resultsController];
+//        _searchController.searchResultsUpdater = self;
+//        _searchController.delegate = self;
+//        _searchController.dimsBackgroundDuringPresentation = YES;
+//        _searchController.hidesNavigationBarDuringPresentation = YES;
+//
+//        UISearchBar *searchBar = _searchController.searchBar;
+//        searchBar.placeholder = NSLocalizedString(@"Search", nil);
+//        searchBar.text = self.navigationController.initialSearchTerm;
+//        searchBar.scopeButtonTitles = self.segmentedControlTitles;
+//        searchBar.searchBarStyle = UISearchBarStyleProminent;
+//        searchBar.barStyle = UIBarStyleDefault;
+//        searchBar.selectedScopeButtonIndex = 0;
+//        searchBar.clipsToBounds = NO;
+//        searchBar.delegate = self;
+//    }
+//    return _searchController;
+//}
 
-        UISearchBar *searchBar = _searchController.searchBar;
-        searchBar.placeholder = NSLocalizedString(@"Search", nil);
-        searchBar.text = self.navigationController.initialSearchTerm;
-        searchBar.scopeButtonTitles = self.segmentedControlTitles;
-        searchBar.searchBarStyle = UISearchBarStyleProminent;
-        searchBar.barStyle = UIBarStyleDefault;
-        searchBar.selectedScopeButtonIndex = 0;
-        searchBar.clipsToBounds = NO;
-        searchBar.delegate = self;
-    }
-    return _searchController;
-}
-
-- (DZNPhotoSearchResultsController *)searchResultsController
-{
-    if (!_searchResultsController) {
-        _searchResultsController = [[DZNPhotoSearchResultsController alloc] initWithStyle:UITableViewStylePlain];
-        _searchResultsController.tableView.tableFooterView = [UIView new];
-        _searchResultsController.tableView.delegate = self;
-    }
-    return _searchResultsController;
-}
-
-- (UISearchBar *)searchBar
-{
-    return self.searchController.searchBar;
-}
-
-- (UITableView *)searchResultsTableView
-{
-    return _searchResultsController.tableView;
-}
+//- (DZNPhotoSearchResultsController *)searchResultsController
+//{
+//    if (!_searchResultsController) {
+//        _searchResultsController = [[DZNPhotoSearchResultsController alloc] initWithStyle:UITableViewStylePlain];
+//        _searchResultsController.tableView.tableFooterView = [UIView new];
+//        _searchResultsController.tableView.delegate = self;
+//    }
+//    return _searchResultsController;
+//}
+//
+//- (UISearchBar *)searchBar
+//{
+//    return self.searchController.searchBar;
+//}
+//
+//- (UITableView *)searchResultsTableView
+//{
+//    return _searchResultsController.tableView;
+//}
 
 - (UIButton *)loadButton
 {
@@ -267,7 +268,7 @@ static NSUInteger kDZNPhotoDisplayMinimumColumnCount = 4.0;
     }
     
     topBarsHeight += CGRectGetHeight(self.navigationController.navigationBar.frame);
-    topBarsHeight += CGRectGetHeight(self.searchBar.frame);
+//    topBarsHeight += CGRectGetHeight(self.searchBar.frame);
     
     return CGSizeMake(CGRectGetWidth(self.navigationController.view.frame), topBarsHeight);
 }
@@ -337,10 +338,10 @@ static NSUInteger kDZNPhotoDisplayMinimumColumnCount = 4.0;
 #pragma mark - Setter methods
 
 /* Sets the search bar text, specially when the UISearchDisplayController when dimissing removes the bar's text by default. */
-- (void)setSearchBarText:(NSString *)text
-{
-    self.searchBar.text = text;
-}
+//- (void)setSearchBarText:(NSString *)text
+//{
+//    self.searchBar.text = text;
+//}
 
 /* Sets the current photo search response and refreshs the collection view. */
 - (void)setPhotoSearchList:(NSArray *)list
@@ -428,6 +429,7 @@ static NSUInteger kDZNPhotoDisplayMinimumColumnCount = 4.0;
         DZNPhotoEditorViewController *controller = [[DZNPhotoEditorViewController alloc] initWithImage:image];
         controller.cropMode = self.navigationController.cropMode;
         controller.cropSize = self.navigationController.cropSize;
+        controller.photoMetadata = metadata;
         
         [self.navigationController pushViewController:controller animated:YES];
 
@@ -441,7 +443,7 @@ static NSUInteger kDZNPhotoDisplayMinimumColumnCount = 4.0;
         }];
         
         if (!image) {
-            controller.rightButton.enabled = NO;
+//            controller.rightButton.enabled = NO;
             [controller.activityIndicator startAnimating];
             
             __weak DZNPhotoEditorViewController *weakController = controller;
@@ -452,7 +454,7 @@ static NSUInteger kDZNPhotoDisplayMinimumColumnCount = 4.0;
                                                                    progress:NULL
                                                                   completed:^(UIImage *image, NSError *error, SDImageCacheType cacheType, NSURL *imageURL) {
                                                                       if (!error) {
-                                                                          weakController.rightButton.enabled = YES;
+//                                                                          weakController.rightButton.enabled = YES;
                                                                           weakController.imageView.image = image;
                                                                       }
                                                                       else {
@@ -483,67 +485,68 @@ static NSUInteger kDZNPhotoDisplayMinimumColumnCount = 4.0;
     }
 }
 
-- (BOOL)canSearchTags
-{
-    if (!self.navigationController.allowAutoCompletedSearch) {
-        return NO;
-    }
-    
-    id <DZNPhotoServiceClientProtocol> client = [[DZNPhotoServiceFactory defaultFactory] clientForService:DZNPhotoPickerControllerServiceFlickr];
-    if (!client) {
-        return NO;
-    }
-    
-    return YES;
-}
+//- (BOOL)canSearchTags
+//{
+//    if (!self.navigationController.allowAutoCompletedSearch) {
+//        return NO;
+//    }
+//
+//    id <DZNPhotoServiceClientProtocol> client = [[DZNPhotoServiceFactory defaultFactory] clientForService:DZNPhotoPickerControllerServiceFlickr];
+//    if (!client) {
+//        return NO;
+//    }
+//
+//    return YES;
+//}
 
 /* Checks if the search string is long enough to perfom a tag search. */
-- (void)shouldSearchTag:(NSString *)term
-{
-    if (!self.canSearchTags) {
-        return;
-    }
-    
-    [self resetSearchTimer];
-    
-    if ([self.searchBar isFirstResponder] && term.length > 2) {
-        self.searchTimer = [NSTimer timerWithTimeInterval:0.25 target:self selector:@selector(searchTag:) userInfo:@{@"term": term} repeats:YES];
-        [[NSRunLoop currentRunLoop] addTimer:self.searchTimer forMode:NSDefaultRunLoopMode];
-    }
-}
+//- (void)shouldSearchTag:(NSString *)term
+//{
+//    if (!self.canSearchTags) {
+//        return;
+//    }
+//
+//    [self resetSearchTimer];
+//
+//    if ([self.searchBar isFirstResponder] && term.length > 2) {
+//        self.searchTimer = [NSTimer timerWithTimeInterval:0.25 target:self selector:@selector(searchTag:) userInfo:@{@"term": term} repeats:YES];
+//        [[NSRunLoop currentRunLoop] addTimer:self.searchTimer forMode:NSDefaultRunLoopMode];
+//    }
+//}
 
 /*
  Triggers a tag search when typing more than 2 characters in the search bar.
  This allows auto-completion and related tags to what the user wants to search.
  */
-- (void)searchTag:(NSTimer *)timer
-{
-    if (!self.canSearchTags) {
-        return;
-    }
-    
-    _error = nil;
-    
-    NSString *term = [timer.userInfo objectForKey:@"term"];
-    [self resetSearchTimer];
-    
-    id <DZNPhotoServiceClientProtocol> client = [[DZNPhotoServiceFactory defaultFactory] clientForService:DZNPhotoPickerControllerServiceFlickr];
-
-    [client searchTagsWithKeyword:term
-                       completion:^(NSArray *list, NSError *error) {
-                           
-                           if (error) [self setLoadingError:error];
-                           else [_searchResultsController setSearchResults:list];
-                       }];
-}
+//- (void)searchTag:(NSTimer *)timer
+//{
+//    if (!self.canSearchTags) {
+//        return;
+//    }
+//
+//    _error = nil;
+//
+//    NSString *term = [timer.userInfo objectForKey:@"term"];
+//    [self resetSearchTimer];
+//
+//    id <DZNPhotoServiceClientProtocol> client = [[DZNPhotoServiceFactory defaultFactory] clientForService:DZNPhotoPickerControllerServiceFlickr];
+//
+//    [client searchTagsWithKeyword:term
+//                       completion:^(NSArray *list, NSError *error) {
+//
+//                           if (error) [self setLoadingError:error];
+//                           else [_searchResultsController setSearchResults:list];
+//                       }];
+//}
 
 /* Checks if the search string is valid and conditions are ok, for performing a photo search. */
 - (void)shouldSearchPhotos:(NSString *)keyword
 {
-    if ([self.searchBar.text isEqualToString:keyword] && self.previousService == self.selectedService) {
+    if ([self.navigationController.initialSearchTerm isEqualToString:keyword] && self.previousService == self.selectedService) {
         return;
     }
     
+    self.navigationController.initialSearchTerm = keyword;
     self.previousService = self.selectedService;
     
     [self resetPhotos];
@@ -561,7 +564,7 @@ static NSUInteger kDZNPhotoDisplayMinimumColumnCount = 4.0;
     [self setActivityIndicatorsVisible:YES];
     [self.collectionView reloadData];
     
-    self.searchBar.text = keyword;
+//    self.searchBar.text = keyword;
 
     [self.selectedServiceClient searchPhotosWithKeyword:keyword
                                                    page:self.currentPage
@@ -593,7 +596,7 @@ static NSUInteger kDZNPhotoDisplayMinimumColumnCount = 4.0;
         
     button.enabled = NO;
     
-    [self searchPhotosWithKeyword:self.searchBar.text];
+    [self searchPhotosWithKeyword:self.navigationController.initialSearchTerm];
 }
 
 
@@ -628,11 +631,11 @@ static NSUInteger kDZNPhotoDisplayMinimumColumnCount = 4.0;
     
     if ([elementKind isEqualToString:UICollectionElementKindSectionHeader]) {
         if (supplementaryView.subviews.count == 0) {
-            [supplementaryView addSubview:self.searchBar];
-            
-            CGRect frame = self.searchBar.frame;
-            frame.size.width = CGRectGetWidth(collectionView.frame);
-            self.searchBar.frame = frame;
+//            [supplementaryView addSubview:self.searchBar];
+//
+//            CGRect frame = self.searchBar.frame;
+//            frame.size.width = CGRectGetWidth(collectionView.frame);
+//            self.searchBar.frame = frame;
         }
     }
     else if ([elementKind isEqualToString:UICollectionElementKindSectionFooter]) {
@@ -706,9 +709,9 @@ static NSUInteger kDZNPhotoDisplayMinimumColumnCount = 4.0;
 
 - (void)collectionView:(UICollectionView *)collectionView didSelectItemAtIndexPath:(NSIndexPath *)indexPath
 {
-    if ([self.searchBar isFirstResponder]) {
-        [self.searchBar resignFirstResponder];
-    }
+//    if ([self.searchBar isFirstResponder]) {
+//        [self.searchBar resignFirstResponder];
+//    }
     
     DZNPhotoMetadata *metada = [self metadataAtIndexPath:indexPath];
     [self selectedMetadata:metada];
@@ -759,76 +762,76 @@ static NSUInteger kDZNPhotoDisplayMinimumColumnCount = 4.0;
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath
 {
     [tableView deselectRowAtIndexPath:indexPath animated:YES];
-    [self.searchController setActive:NO];
+//    [self.searchController setActive:NO];
     
-    DZNPhotoTag *tag = [_searchResultsController tagAtIndexPath:indexPath];
+// AMS NOT SURE    DZNPhotoTag *tag = [_searchResultsController tagAtIndexPath:indexPath];
     
-    if (tag) {
-        [self shouldSearchPhotos:tag.term];
-        [self setSearchBarText:tag.term];
-    }
+//    if (tag) {
+//        [self shouldSearchPhotos:tag.term];
+//        [self setSearchBarText:tag.term];
+//    }
 }
 
 
 #pragma mark - UISearchDelegate methods
 
-- (BOOL)searchBarShouldBeginEditing:(UISearchBar *)searchBar
-{
-    [self stopLoadingRequest];
-    return YES;
-}
-
-- (BOOL)searchBarShouldEndEditing:(UISearchBar *)searchBar
-{
-    return YES;
-}
-
-- (void)searchBar:(UISearchBar *)searchBar textDidChange:(NSString *)searchText
-{
-    [self stopLoadingRequest];
-}
-
-- (void)searchBarTextDidBeginEditing:(UISearchBar *)searchBar
-{
-    [self.searchResultsController setSearchResults:nil];
-}
-
-- (void)searchBarTextDidEndEditing:(UISearchBar *)searchBar
-{
-    // do something
-}
-
-- (void)searchBarSearchButtonClicked:(UISearchBar *)searchBar
-{
-    NSString *term = searchBar.text;
-    [self.searchController setActive:NO];
-    
-    [self shouldSearchPhotos:term];
-    [self setSearchBarText:term];
-}
-
-- (void)searchBarCancelButtonClicked:(UISearchBar *)searchBar
-{
-    NSString *term = searchBar.text;
-
-    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.1 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
-        [self setSearchBarText:term];
-    });
-}
-
-- (void)searchBar:(UISearchBar *)searchBar selectedScopeButtonIndexDidChange:(NSInteger)selectedScope
-{
-    NSString *name = [searchBar.scopeButtonTitles objectAtIndex:selectedScope];
-    _selectedService = DZNPhotoServiceFromName(name);
-}
+//- (BOOL)searchBarShouldBeginEditing:(UISearchBar *)searchBar
+//{
+//    [self stopLoadingRequest];
+//    return YES;
+//}
+//
+//- (BOOL)searchBarShouldEndEditing:(UISearchBar *)searchBar
+//{
+//    return YES;
+//}
+//
+//- (void)searchBar:(UISearchBar *)searchBar textDidChange:(NSString *)searchText
+//{
+//    [self stopLoadingRequest];
+//}
+//
+//- (void)searchBarTextDidBeginEditing:(UISearchBar *)searchBar
+//{
+//    [self.searchResultsController setSearchResults:nil];
+//}
+//
+//- (void)searchBarTextDidEndEditing:(UISearchBar *)searchBar
+//{
+//    // do something
+//}
+//
+//- (void)searchBarSearchButtonClicked:(UISearchBar *)searchBar
+//{
+//    NSString *term = searchBar.text;
+//    [self.searchController setActive:NO];
+//
+//    [self shouldSearchPhotos:term];
+//    [self setSearchBarText:term];
+//}
+//
+//- (void)searchBarCancelButtonClicked:(UISearchBar *)searchBar
+//{
+//    NSString *term = searchBar.text;
+//
+//    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.1 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+//        [self setSearchBarText:term];
+//    });
+//}
+//
+//- (void)searchBar:(UISearchBar *)searchBar selectedScopeButtonIndexDidChange:(NSInteger)selectedScope
+//{
+//    NSString *name = [searchBar.scopeButtonTitles objectAtIndex:selectedScope];
+//    _selectedService = DZNPhotoServiceFromName(name);
+//}
 
 
 #pragma mark - UISearchResultsUpdating methods
 
-- (void)updateSearchResultsForSearchController:(UISearchController *)searchController
-{
-    [self shouldSearchTag:self.searchBar.text];
-}
+//- (void)updateSearchResultsForSearchController:(UISearchController *)searchController
+//{
+//    [self shouldSearchTag:self.searchBar.text];
+//}
 
 
 #pragma mark - UISearchControllerDelegate
@@ -840,30 +843,30 @@ static NSUInteger kDZNPhotoDisplayMinimumColumnCount = 4.0;
 //
 // Implement this method if the default presentation is not adequate for your purposes.
 //
-- (void)presentSearchController:(UISearchController *)searchController
-{
-    
-}
-
-- (void)willPresentSearchController:(UISearchController *)searchController
-{
-    // do something before the search controller is presented
-}
-
-- (void)didPresentSearchController:(UISearchController *)searchController
-{
-    // do something after the search controller is presented
-}
-
-- (void)willDismissSearchController:(UISearchController *)searchController
-{
-    // do something before the search controller is dismissed
-}
-
-- (void)didDismissSearchController:(UISearchController *)searchController
-{
-    // do something after the search controller is dismissed
-}
+//- (void)presentSearchController:(UISearchController *)searchController
+//{
+//    
+//}
+//
+//- (void)willPresentSearchController:(UISearchController *)searchController
+//{
+//    // do something before the search controller is presented
+//}
+//
+//- (void)didPresentSearchController:(UISearchController *)searchController
+//{
+//    // do something after the search controller is presented
+//}
+//
+//- (void)willDismissSearchController:(UISearchController *)searchController
+//{
+//    // do something before the search controller is dismissed
+//}
+//
+//- (void)didDismissSearchController:(UISearchController *)searchController
+//{
+//    // do something after the search controller is dismissed
+//}
 
 
 #pragma mark - DZNEmptyDataSetSource Methods
@@ -922,9 +925,9 @@ static NSUInteger kDZNPhotoDisplayMinimumColumnCount = 4.0;
 
 - (CGFloat)verticalOffsetForEmptyDataSet:(UIScrollView *)scrollView
 {
-    if (self.loading) {
-        return -CGRectGetHeight(self.searchBar.frame)/2.0;
-    }
+//    if (self.loading) {
+//        return -CGRectGetHeight(self.searchBar.frame)/2.0;
+//    }
     
     return 0.0;
 }
@@ -959,7 +962,7 @@ static NSUInteger kDZNPhotoDisplayMinimumColumnCount = 4.0;
     
     _metadataList = nil;
     
-    _searchController = nil;
+//    _searchController = nil;
     _loadButton = nil;
     _activityIndicator = nil;
     _segmentedControlTitles = nil;

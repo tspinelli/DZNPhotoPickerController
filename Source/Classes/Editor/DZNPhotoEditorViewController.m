@@ -10,6 +10,7 @@
 
 #import "DZNPhotoEditorViewController.h"
 
+
 #define DZN_IS_IPAD ([[UIDevice currentDevice] userInterfaceIdiom] == UIUserInterfaceIdiomPad)
 #define DZN_IS_IOS8 ([[UIDevice currentDevice].systemVersion floatValue] > 8.0)
 
@@ -64,7 +65,8 @@ typedef NS_ENUM(NSInteger, DZNPhotoAspect) {
 @synthesize bottomView = _bottomView;
 @synthesize activityIndicator = _activityIndicator;
 @synthesize cropSize = _cropSize;
-@synthesize rightButton = _rightButton;
+//@synthesize rightButton = _rightButton;
+@synthesize licenseLabel = _licenseLabel;
 @synthesize leftButton = _leftButton;
 
 #pragma mark - Initializer
@@ -90,8 +92,16 @@ typedef NS_ENUM(NSInteger, DZNPhotoAspect) {
 
 - (void)commonInit
 {
-    self.automaticallyAdjustsScrollViewInsets = NO;
-    self.view.backgroundColor = [UIColor blackColor];
+    //    self.automaticallyAdjustsScrollViewInsets = NO;
+    self.scrollView.contentInsetAdjustmentBehavior = UIScrollViewContentInsetAdjustmentNever;
+    self.edgesForExtendedLayout = UIRectEdgeNone;
+    
+    if (@available(iOS 13.0, *)) {
+        self.view.backgroundColor = [UIColor systemBackgroundColor];
+    } else {
+        // Fallback on earlier versions
+        self.view.backgroundColor = [UIColor whiteColor];
+    }
     
     if (DZN_IS_IPAD) {
         self.title = NSLocalizedString(@"Edit Photo", nil);
@@ -132,12 +142,12 @@ typedef NS_ENUM(NSInteger, DZNPhotoAspect) {
     [self.view addSubview:self.bottomView];
     
     self.imageView.image = self.editingImage;
-    [self.view insertSubview:self.maskView aboveSubview:self.scrollView];
+//    [self.view insertSubview:self.maskView aboveSubview:self.scrollView];
     
     NSDictionary *views = @{@"bottomView": self.bottomView};
     
     [self.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"H:|[bottomView]|" options:0 metrics:nil views:views]];
-    [self.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"V:[bottomView(88)]|" options:0 metrics:nil views:views]];
+    [self.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"V:[bottomView(44)]|" options:0 metrics:nil views:views]];
     
     [self.view layoutSubviews];
 }
@@ -189,7 +199,7 @@ typedef NS_ENUM(NSInteger, DZNPhotoAspect) {
         _scrollView = [[UIScrollView alloc] initWithFrame:self.view.bounds];
         _scrollView.backgroundColor = [UIColor clearColor];
         _scrollView.minimumZoomScale = 1.0;
-        _scrollView.maximumZoomScale = 2.0;
+        _scrollView.maximumZoomScale = 4.0;
         _scrollView.showsHorizontalScrollIndicator = NO;
         _scrollView.showsVerticalScrollIndicator = NO;
         _scrollView.delegate = self;
@@ -224,20 +234,20 @@ typedef NS_ENUM(NSInteger, DZNPhotoAspect) {
 - (UIButton *)leftButton
 {
     if (!_leftButton) {
-        _leftButton = [self buttonWithTitle:NSLocalizedString(@"Cancel", nil)];
+        _leftButton = [self buttonWithTitle:NSLocalizedString(@"Back", nil)];
         [_leftButton addTarget:self action:@selector(cancelEdition:) forControlEvents:UIControlEventTouchUpInside];
     }
     return _leftButton;
 }
-
-- (UIButton *)rightButton
-{
-    if (!_rightButton) {
-        _rightButton = [self buttonWithTitle:NSLocalizedString(@"Choose", nil)];
-        [_rightButton addTarget:self action:@selector(acceptEdition:) forControlEvents:UIControlEventTouchUpInside];
-    }
-    return _rightButton;
-}
+//
+//- (UIButton *)rightButton
+//{
+//    if (!_rightButton) {
+//        _rightButton = [self buttonWithTitle:NSLocalizedString(@"Choose", nil)];
+//        [_rightButton addTarget:self action:@selector(acceptEdition:) forControlEvents:UIControlEventTouchUpInside];
+//    }
+//    return _rightButton;
+//}
 
 - (DZNPhotoEditorContainerView *)bottomView
 {
@@ -246,33 +256,43 @@ typedef NS_ENUM(NSInteger, DZNPhotoAspect) {
         _bottomView = [DZNPhotoEditorContainerView new];
         _bottomView.translatesAutoresizingMaskIntoConstraints = NO;
         _bottomView.tintColor = [UIColor whiteColor];
-        _bottomView.userInteractionEnabled = YES;
+        _bottomView.userInteractionEnabled = NO;
         
         NSMutableDictionary *views = [NSMutableDictionary new];
-        NSDictionary *metrics = @{@"hmargin" : @(13), @"barsHeight": @(self.barsHeight)};
+        NSDictionary *metrics = @{@"hmargin" : @(13), @"vmargin" : @(21), @"barsHeight": @([UIApplication sharedApplication].statusBarFrame.size.height+self.navigationController.navigationBar.frame.size.height)};
         
+        _licenseLabel = [[UILabel alloc] initWithFrame:CGRectZero];
+        _licenseLabel.textColor = UIColor.blackColor;
+        _licenseLabel.backgroundColor = [UIColor colorWithWhite:0.9 alpha:0.7];
+        _licenseLabel.textAlignment = NSTextAlignmentCenter;
+        _licenseLabel.text = [NSString stringWithFormat:@"Flickr Photo Credit: %@",(_photoMetadata.authorUsername) ? _photoMetadata.authorUsername : @"Not Listed"];
+        _licenseLabel.userInteractionEnabled = NO;
+        _licenseLabel.minimumScaleFactor = 0.5;
+        _licenseLabel.translatesAutoresizingMaskIntoConstraints = NO;
+        _licenseLabel.layer.cornerRadius = 10;
+        _licenseLabel.layer.masksToBounds = TRUE;
+        [views setObject:self.licenseLabel forKey:@"licenseLabel"];
+        [_bottomView addSubview:_licenseLabel];
+        
+        [_bottomView addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"H:|-10-[licenseLabel]-10-|" options:0 metrics:nil views:views]];
+        [_bottomView addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"V:|-[licenseLabel]-|" options:0 metrics:nil views:views]];
+
         if (DZN_IS_IPAD) {
             if (self.navigationController.viewControllers.count == 1) {
                 self.navigationItem.leftBarButtonItem = [[UIBarButtonItem alloc] initWithCustomView:self.leftButton];
             }
 
-            self.navigationItem.rightBarButtonItem = [[UIBarButtonItem alloc] initWithCustomView:self.rightButton];
-        }
-        else {
+//            self.navigationItem.rightBarButtonItem = [[UIBarButtonItem alloc] initWithCustomView:self.rightButton];
+        } else {
             self.leftButton.translatesAutoresizingMaskIntoConstraints = NO;
-            self.rightButton.translatesAutoresizingMaskIntoConstraints = NO;
             
-            [_bottomView addSubview:self.leftButton];
-            [_bottomView addSubview:self.rightButton];
-            
+            [self.view addSubview:self.leftButton];
+                        
             [views setObject:self.leftButton forKey:@"leftButton"];
-            [views setObject:self.rightButton forKey:@"rightButton"];
             
-            [_bottomView addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"H:|-hmargin-[leftButton]" options:0 metrics:metrics views:views]];
-            [_bottomView addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"H:[rightButton]-hmargin-|" options:0 metrics:metrics views:views]];
+            [self.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"H:|-hmargin-[leftButton]" options:0 metrics:metrics views:views]];
             
-            [_bottomView addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"V:|[leftButton]|" options:0 metrics:metrics views:views]];
-            [_bottomView addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"V:|[rightButton]|" options:0 metrics:metrics views:views]];
+            [self.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"V:|-20-[leftButton]" options:0 metrics:metrics views:views]];
         }
         
         if (self.cropMode == DZNPhotoEditorViewControllerCropModeCircular)
@@ -320,9 +340,11 @@ typedef NS_ENUM(NSInteger, DZNPhotoAspect) {
 {
     UIButton *button = [UIButton buttonWithType:UIButtonTypeSystem];
     [button.titleLabel setFont:[UIFont systemFontOfSize:18.0]];
+    [button setTitleColor:[UIColor colorWithRed:0 green:(204.0/255) blue:(204.0/255) alpha:1.0] forState:UIControlStateNormal];
     [button setTitle:title forState:UIControlStateNormal];
     [button setTitleEdgeInsets:UIEdgeInsetsMake(-1.0, 0.0, 0.0, 0.0)];
     [button setUserInteractionEnabled:YES];
+    [button setTranslatesAutoresizingMaskIntoConstraints:NO];
     [button sizeToFit];
     return button;
 }
@@ -715,12 +737,27 @@ DZNPhotoAspect photoAspectFromSize(CGSize aspectRatio)
     });
 }
 
+//- (void)cancelEdition:(id)sender
+//{
+//    if (self.cancelBlock) {
+//        self.cancelBlock(self);
+//    }
+//}
+
 - (void)cancelEdition:(id)sender
 {
-    if (self.cancelBlock) {
-        self.cancelBlock(self);
+    if (_scrollView.zoomScale > _scrollView.maximumZoomScale) {
+        return;
+    }
+    
+    if (self.navigationController.viewControllers.count > 1) {
+        [self.navigationController popViewControllerAnimated:YES];
+    }
+    else {
+        [self.navigationController dismissViewControllerAnimated:YES completion:NULL];
     }
 }
+
 
 
 #pragma mark - UIScrollViewDelegate Methods

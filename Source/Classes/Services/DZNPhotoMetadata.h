@@ -30,6 +30,8 @@
 @property (nonatomic, readonly) NSString *authorUsername;
 /** The url of the author's profile. */
 @property (nonatomic, readonly) NSURL *authorProfileURL;
+/** The url of the author's profile. */
+@property (nonatomic, readonly) NSInteger *license;
 /** The name of the photo service. */
 @property (nonatomic, readonly) NSString *serviceName;
 /** The MIME content-type of the image. */
